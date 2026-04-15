@@ -21,7 +21,7 @@ from groq import Groq
 
 # ── App Config ──────────────────────────────────────────────────────────────
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'uae-heritage-2026-alhanshim')
+app.secret_key = os.environ.get('SECRET_KEY', 'heritagehub-digital-archive-2026')
 UPLOAD_FOLDER = os.path.join('static', 'uploads')
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 DB_PATH = 'heritage.db'

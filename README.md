@@ -1,18 +1,18 @@
-# 📚 UAE Family Heritage Digital Archive
-## أرشيف التراث الأسري الرقمي الإماراتي
+# 🏛️ HeritageHub
+## حفظ التراث الأسري الرقمي
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/)
 [![Flask](https://img.shields.io/badge/flask-3.0+-green.svg)](https://flask.palletsprojects.com/)
 [![Status](https://img.shields.io/badge/status-production--ready-brightgreen.svg)](#)
 
-**A modern, AI-powered digital archival system for preserving and celebrating UAE family heritage stories. Part of the Year of the Family 2026 initiative.** 🇦🇪
+**A modern, AI-powered digital archival system for preserving and celebrating family heritage stories worldwide. Bilingual (English/Arabic) support.** 🌍
 
 ---
 
 ## 🎯 Project Overview
 
-The UAE Family Heritage Digital Archive is a full-stack web application designed to capture, preserve, and share family stories and cultural heritage through a bilingual (English/Arabic) interface. Using advanced AI technology (Groq's Llama 3.3-70B), the system automatically enhances and generates stories while maintaining cultural authenticity and value-driven narratives rooted in UAE traditions.
+**HeritageHub** is a full-stack web application designed to capture, preserve, and share family stories and cultural heritage through a bilingual (English/Arabic) interface. Using advanced AI technology (Groq's Llama 3.1-8B), the system automatically enhances and generates stories while maintaining cultural authenticity and value-driven narratives.
 
 **Key Innovation**: Combines manual story submission with AI-powered enrichment and generation, creating a comprehensive heritage preservation platform accessible to all family members.
 
@@ -110,8 +110,8 @@ The UAE Family Heritage Digital Archive is a full-stack web application designed
 
 #### 1. Clone the Repository
 ```bash
-git clone https://github.com/ALHANSHIM/-family-heritage-digital-archival-system-with-LLM.git
-cd -family-heritage-digital-archival-system-with-LLM
+git clone https://github.com/ALHANSHIM/HeritageHub.git
+cd HeritageHub
 ```
 
 #### 2. Create Virtual Environment
@@ -263,13 +263,13 @@ cp heritage.db heritage.db.backup
 ### Story Generation Workflow
 
 ```
-User Input (topic) → Groq API (Llama 3.3-70B)
+User Input (topic) → Groq API (Llama 3.1-8B)
     ↓
 AI generates complete story with:
   - English narrative (narrative + cultural context)
   - Arabic translation (formal Modern Standard Arabic)
   - Category assignment
-  - UAE values extraction
+  - Family values extraction
   - Relationship inference
   ↓
 Story saved to database + archive
