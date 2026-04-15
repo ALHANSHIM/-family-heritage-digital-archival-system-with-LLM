@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+{% block title %}{% if action=='add' %}Add Story{% else %}Edit Story{% endif %} — UAE Heritage{% endblock %}
+{% block content %}
+
+<div class="page-hero page-hero--sm page-hero--dark">
+  <div class="container">
+    <div class="page-hero__label">Administration</div>
+    <h1 class="page-hero__title">
+      {% if action=='add' %}
+      Add Story &nbsp; <span class="ar-title">إضافة قصة</span>
+      {% else %}
+      Edit Story &nbsp; <span class="ar-title">تعديل القصة</span>
+      {% endif %}
+    </h1>
+  </div>
+</div>
+
+<section class="section section--sand">
+  <div class="container">
+    {% if error %}
+    <div class="alert alert--error">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST" enctype="multipart/form-data" class="story-form">
+
+      <!-- ENGLISH CONTENT -->
+      <div class="form-section">
+        <div class="form-section__title">English Content</div>
+        <div class="form-group">
+          <label class="form-label">Title (English) *</label>
+          <input type="text" name="title_en" class="form-input" 
+            value="{{ story.title_en if story else request.form.get('title_en','') }}"
+            placeholder="Enter story title in English" required/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Story Content (English) *</label>
+          <textarea name="content_en" class="form-input form-textarea" rows="8"
+            placeholder="Enter the main story content in English" required>{{ story.content_en if story else request.form.get('content_en','') }}</textarea>
+        </div>
+      </div>
+
+      <!-- ARABIC CONTENT -->
+      <div class="form-section">
+        <div class="form-section__title">Arabic Content</div>
+        <div class="form-group">
+          <label class="form-label">Title (Arabic)</label>
+          <input type="text" name="title_ar" class="form-input" 
+            value="{{ story.title_ar if story else request.form.get('title_ar','') }}"
+            placeholder="أدخل عنوان القصة بالعربية" dir="rtl"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Story Content (Arabic)</label>
+          <textarea name="content_ar" class="form-input form-textarea" rows="8"
+            placeholder="أدخل محتوى القصة بالعربية" dir="rtl">{{ story.content_ar if story else request.form.get('content_ar','') }}</textarea>
+        </div>
+      </div>
+
+      <!-- ORIGINAL STORY -->
+      <div class="form-section">
+        <div class="form-section__title">Original Source & AI Enhancement</div>
+        <div class="form-group">
+          <label class="form-label">Original Story (if from transcription/interview)</label>
+          <textarea name="original_story" class="form-input form-textarea" rows="6"
+            placeholder="Paste the original story if you have one — useful for AI enrichment">{{ story.original_story if story else request.form.get('original_story','') }}</textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Original Language</label>
+          <select name="original_language" class="form-input form-select">
+            <option value="English" {% if (story and story.original_language=='English') or request.form.get('original_language')=='English' %}selected{% endif %}>English</option>
+            <option value="Arabic" {% if story and story.original_language=='Arabic' %}selected{% endif %}>Arabic</option>
+            <option value="Other" {% if story and story.original_language=='Other' %}selected{% endif %}>Other</option>
+          </select>
+        </div>
+        {% if api_key %}
+        <div class="form-group">
+          <label class="checkbox-item">
+            <input type="checkbox" name="use_ai" value="1"/>
+            <span>Use AI to enrich translations and theme</span>
+          </label>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- STORYTELLER INFO -->
+      <div class="form-section">
+        <div class="form-section__title">Storyteller Information</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Storyteller Name</label>
+            <input type="text" name="storyteller_name" class="form-input"
+              value="{{ story.storyteller_name if story else request.form.get('storyteller_name','') }}"
+              placeholder="e.g., Mohammed Al Mansouri"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Age</label>
+            <input type="number" name="storyteller_age" class="form-input"
+              value="{{ story.storyteller_age if story else request.form.get('storyteller_age','') }}"
+              placeholder="Age" min="0" max="150"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Relationship to Community</label>
+          <select name="relationship" class="form-input form-select">
+            <option value="">— Select —</option>
+            {% for rel in relationships %}
+            <option value="{{ rel }}" {% if (story and story.relationship==rel) or request.form.get('relationship')==rel %}selected{% endif %}>
+              {{ rel }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <!-- STORY METADATA -->
+      <div class="form-section">
+        <div class="form-section__title">Story Metadata &nbsp; <span class="ar-inline">بيانات القصة</span></div>
+        
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <select name="category" class="form-input form-select">
+            {% for cat in categories %}
+            <option value="{{ cat.id }}" {% if (story and story.category==cat.id) or request.form.get('category')==cat.id %}selected{% endif %}>
+              {{ cat.en }} — {{ cat.ar }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">UAE Values Embodied</label>
+          <div class="checkbox-grid">
+            {% for v in uae_values %}
+            <label class="checkbox-item">
+              <input type="checkbox" name="values" value="{{ v }}"
+                {% if (story and v in story_values) or v in request.form.getlist('values') %}checked{% endif %}/>
+              <span>{{ v }}</span>
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Location</label>
+            <input type="text" name="location" class="form-input"
+              value="{{ story.location if story else request.form.get('location','UAE') }}"
+              placeholder="e.g., Al Ain, Abu Dhabi"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Theme / Key Message</label>
+            <input type="text" name="theme" class="form-input"
+              value="{{ story.theme if story else request.form.get('theme','') }}"
+              placeholder="e.g., Resilience through adversity"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- IMAGE & FEATURED -->
+      <div class="form-section">
+        <div class="form-section__title">Media & Visibility</div>
+        <div class="form-group">
+          <label class="form-label">Story Image</label>
+          <input type="file" name="image" class="form-input" accept="image/*"
+            placeholder="Select image (PNG, JPG, GIF, WebP)"/>
+          {% if story and story.image_path %}
+          <div class="form-hint">Current: {{ story.image_path }}</div>
+          {% endif %}
+        </div>
+        <div class="form-group">
+          <label class="checkbox-item">
+            <input type="checkbox" name="featured" value="1"
+              {% if story and story.featured %}checked{% endif %}/>
+            <span>Feature this story on the homepage</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- ACTIONS -->
+      <div class="form-actions">
+        <button type="submit" class="btn btn--gold btn--lg">
+          {% if action=='add' %}
+          Add Story to Archive &nbsp; إضافة القصة
+          {% else %}
+          Update Story &nbsp; تحديث القصة
+          {% endif %}
+        </button>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn--outline-dark btn--lg">
+          Cancel &nbsp; إلغاء
+        </a>
+      </div>
+
+    </form>
+
+  </div>
+</section>
+
+{% endblock %}

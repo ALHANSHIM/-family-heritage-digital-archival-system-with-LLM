@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>{% block title %}UAE Family Heritage Archive{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Cairo:wght@300;400;600;700;900&family=Cormorant+Garamond:ital,wght@0,300;0,600;1,300&family=Noto+Naskh+Arabic:wght@400;600;700&display=swap"/>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav" id="nav">
+  <div class="nav-inner">
+    <a href="{{ url_for('index') }}" class="nav-brand">
+      <span class="brand-ar">تراث</span>
+      <span class="brand-sep"></span>
+      <span class="brand-en">UAE Heritage</span>
+    </a>
+    <div class="nav-links">
+      <a href="{{ url_for('index') }}" class="nav-link {% if request.endpoint=='index' %}active{% endif %}">
+        <span>Home</span><span class="ar">الرئيسية</span>
+      </a>
+      <a href="{{ url_for('stories') }}" class="nav-link {% if request.endpoint in ['stories','story_detail'] %}active{% endif %}">
+        <span>Archive</span><span class="ar">الأرشيف</span>
+      </a>
+      {% if admin %}
+      <a href="{{ url_for('generate_story') }}" class="nav-link {% if request.endpoint=='generate_story' %}active{% endif %}">
+        <span>Generate</span><span class="ar">إنشاء</span>
+      </a>
+      <a href="{{ url_for('admin_dashboard') }}" class="nav-link {% if 'admin' in request.endpoint %}active{% endif %}">
+        <span>Admin</span><span class="ar">الإدارة</span>
+      </a>
+      <a href="{{ url_for('logout') }}" class="nav-link nav-link--logout">
+        <span>Logout</span>
+      </a>
+      {% else %}
+      <a href="{{ url_for('login') }}" class="nav-btn">
+        Admin Login
+      </a>
+      {% endif %}
+    </div>
+    <button class="nav-toggle" id="navToggle" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- FLASH MESSAGES -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+<div class="flash-container">
+  {% for cat, msg in messages %}
+  <div class="flash flash--{{ cat }}">{{ msg }}</div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endwith %}
+
+<!-- PAGE CONTENT -->
+<main>
+{% block content %}{% endblock %}
+</main>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div class="footer-logo-ar">تراث الأسرة الإماراتية</div>
+      <div class="footer-logo-en">UAE Family Heritage Archive</div>
+    </div>
+    <div class="footer-center">
+      <div class="footer-tagline">
+        عام الأسرة ٢٠٢٦ &nbsp;·&nbsp; Year of the Family 2026
+      </div>
+      <div class="footer-divider"></div>
+      <div class="footer-sub">Preserving stories. Honouring elders. Building the future.</div>
+    </div>
+    <div class="footer-nav">
+      <a href="{{ url_for('index') }}">Home</a>
+      <a href="{{ url_for('stories') }}">Archive</a>
+      {% if admin %}<a href="{{ url_for('admin_dashboard') }}">Admin</a>{% endif %}
+    </div>
+  </div>
+</footer>
+
+<!-- FEEDBACK BUTTON & MODAL -->
+<button id="feedbackBtn" class="feedback-btn" title="Send Feedback" aria-label="Send Feedback">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+    <circle cx="9" cy="10" r="1"/>
+    <circle cx="12" cy="10" r="1"/>
+    <circle cx="15" cy="10" r="1"/>
+  </svg>
+</button>
+
+<div id="feedbackModal" class="feedback-modal" style="display: none;">
+  <div class="feedback-modal__overlay"></div>
+  <div class="feedback-modal__content">
+    <div class="feedback-modal__header">
+      <h2>Send Us Your Feedback</h2>
+      <button id="closeFeedback" class="feedback-modal__close">&times;</button>
+    </div>
+    <form method="POST" action="{{ url_for('submit_feedback') }}" class="feedback-form">
+      <input type="hidden" name="feedback_page" id="feedbackPage" value="general"/>
+      
+      <div class="form-group" style="margin-bottom: 1.2rem;">
+        <label for="feedbackEmail" style="display: block; margin-bottom: 0.5rem; color: var(--navy); font-weight: 600; font-size: 0.95rem;">
+          Your Email
+        </label>
+        <input 
+          type="email" 
+          id="feedbackEmail"
+          name="feedback_email" 
+          class="form-input" 
+          placeholder="your.email@example.com"
+          required
+          style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: var(--radius); font-family: inherit; font-size: 0.95rem;"
+        />
+      </div>
+
+      <div class="form-group" style="margin-bottom: 1.2rem;">
+        <label for="feedbackMessage" style="display: block; margin-bottom: 0.5rem; color: var(--navy); font-weight: 600; font-size: 0.95rem;">
+          Your Feedback
+        </label>
+        <textarea 
+          id="feedbackMessage"
+          name="feedback_message" 
+          class="form-input" 
+          placeholder="Share your thoughts or suggestions..."
+          rows="5"
+          required
+          style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: var(--radius); font-family: inherit; font-size: 0.95rem; resize: vertical;"
+        ></textarea>
+      </div>
+
+      <button type="submit" class="btn btn--gold" style="width: 100%; justify-content: center;">
+        Send Feedback
+      </button>
+    </form>
+  </div>
+</div>
+
+<style>
+.feedback-btn {
+  position: fixed;
+  bottom: 2rem;
+  left: 2rem;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+  border: none;
+  color: var(--white);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(201, 168, 76, 0.3);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  z-index: 999;
+}
+
+.feedback-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(201, 168, 76, 0.4);
+}
+
+.feedback-btn:active {
+  transform: scale(0.95);
+}
+
+.feedback-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+}
+
+.feedback-modal__overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(12, 27, 51, 0.5);
+  backdrop-filter: blur(4px);
+  cursor: pointer;
+}
+
+.feedback-modal__content {
+  position: relative;
+  background: var(--white);
+  width: 100%;
+  max-width: 500px;
+  border-radius: 12px 12px 0 0;
+  padding: 2rem;
+  box-shadow: 0 -4px 24px rgba(12, 27, 51, 0.15);
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.feedback-modal__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.feedback-modal__header h2 {
+  color: var(--navy);
+  font-size: 1.4rem;
+  margin: 0;
+}
+
+.feedback-modal__close {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+}
+
+.feedback-modal__close:hover {
+  color: var(--text-dark);
+}
+
+.feedback-form {
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 640px) {
+  .feedback-btn {
+    bottom: 1rem;
+    left: 1rem;
+    width: 48px;
+    height: 48px;
+  }
+
+  .feedback-modal__content {
+    max-width: 100%;
+    border-radius: 16px 16px 0 0;
+  }
+}</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const feedbackBtn = document.getElementById('feedbackBtn');
+  const feedbackModal = document.getElementById('feedbackModal');
+  const closeFeedback = document.getElementById('closeFeedback');
+  const feedbackOverlay = document.querySelector('.feedback-modal__overlay');
+  const feedbackPage = document.getElementById('feedbackPage');
+
+  // Set current page
+  if (window.location.pathname === '/') {
+    feedbackPage.value = 'homepage';
+  } else if (window.location.pathname === '/stories') {
+    feedbackPage.value = 'archive';
+  } else if (window.location.pathname.startsWith('/story/')) {
+    feedbackPage.value = 'story';
+  } else if (window.location.pathname.includes('/admin')) {
+    feedbackPage.value = 'admin';
+  }
+
+  // Open modal
+  feedbackBtn.addEventListener('click', () => {
+    feedbackModal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  });
+
+  // Close modal
+  const closeModal = () => {
+    feedbackModal.style.display = 'none';
+    document.body.style.overflow = '';
+  };
+
+  closeFeedback.addEventListener('click', closeModal);
+  feedbackOverlay.addEventListener('click', closeModal);
+});
+</script>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

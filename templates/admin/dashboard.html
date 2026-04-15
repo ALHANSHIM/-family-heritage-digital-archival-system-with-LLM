@@ -1,0 +1,240 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard — UAE Heritage{% endblock %}
+{% block content %}
+
+<div class="page-hero page-hero--sm page-hero--dark">
+  <div class="container">
+    <div class="page-hero__label">Administration</div>
+    <h1 class="page-hero__title">Dashboard &nbsp; <span class="ar-title">لوحة التحكم</span></h1>
+  </div>
+</div>
+
+<section class="section section--sand">
+  <div class="container">
+
+    <!-- KPI Row -->
+    <div class="kpi-row">
+      <div class="kpi-card">
+        <div class="kpi-card__num">{{ total }}</div>
+        <div class="kpi-card__label">Total Stories<br/><span class="ar-inline">إجمالي القصص</span></div>
+      </div>
+      {% for cat in categories %}
+      <div class="kpi-card">
+        <div class="kpi-card__num">{{ cat_counts.get(cat.id, 0) }}</div>
+        <div class="kpi-card__label">{{ cat.en }}<br/><span class="ar-inline">{{ cat.ar }}</span></div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- ANALYTICS SECTION -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2rem; margin: 3rem 0;">
+      <!-- Visitor Stats -->
+      <div class="sidebar-block" style="border: 1px solid var(--border); padding: 1.5rem; border-radius: var(--radius-lg); background: var(--white);">
+        <div class="sidebar-block__title" style="color: var(--navy); margin-bottom: 1rem;"> Total Visits</div>
+        <div style="font-size: 2.5rem; font-weight: bold; color: var(--gold); margin-bottom: 0.5rem;">{{ analytics.total_visits }}</div>
+        <div style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.9rem;">Page Visit Count</div>
+        
+        {% if analytics.page_stats %}
+        <div style="border-top: 1px solid var(--border); padding-top: 1rem;">
+          <div style="color: var(--text-mid); font-size: 0.85rem; font-weight: 600; margin-bottom: 0.8rem;">Traffic by Page:</div>
+          {% for page_stat in analytics.page_stats %}
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--text-dark);">
+            <span style="text-transform: capitalize;">{{ page_stat.page }}</span>
+            <span style="color: var(--gold); font-weight: bold;">{{ page_stat.count }}</span>
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Unique Visitors -->
+      <div class="sidebar-block" style="border: 1px solid var(--border); padding: 1.5rem; border-radius: var(--radius-lg); background: var(--white);">
+        <div class="sidebar-block__title" style="color: var(--navy); margin-bottom: 1rem;"> Unique Visitors</div>
+        <div style="font-size: 2.5rem; font-weight: bold; color: var(--green); margin-bottom: 0.5rem;">{{ analytics.unique_visitors }}</div>
+        <div style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.9rem;">People Who Visited (Counted Once Per Day)</div>
+        
+        <div style="border-top: 1px solid var(--border); padding-top: 1rem;">
+          <div style="color: var(--text-mid); font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem;">Avg Pages ViewedViewed per Person:</div>
+          <div style="font-size: 1.2rem; font-weight: 600; color: var(--gold);">
+            {% if analytics.unique_visitors > 0 %}
+              {{ "%.1f"|format(analytics.total_visits / analytics.unique_visitors) }}
+            {% else %}
+              0
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Top Stories -->
+      <div class="sidebar-block" style="border: 1px solid var(--border); padding: 1.5rem; border-radius: var(--radius-lg); background: var(--white);">
+        <div class="sidebar-block__title" style="color: var(--navy); margin-bottom: 1rem;"> Most Read Stories</div>
+        
+        {% if analytics.top_stories %}
+        <div style="display: flex; flex-direction: column; gap: 0.8rem;">
+          {% for story in analytics.top_stories[:5] %}
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: var(--cream); border-radius: var(--radius); border-left: 3px solid var(--gold);">
+            <span style="font-size: 0.9rem; color: var(--text-dark); flex: 1;">{{ story.title_en[:25] }}{% if story.title_en|length > 25 %}...{% endif %}</span>
+            <span style="color: var(--gold); font-weight: bold; font-size: 0.9rem;">{{ story.read_count }}</span>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div style="color: var(--text-muted); font-size: 0.9rem;">No story reads yet</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- FEEDBACK SECTION -->
+    {% if feedback %}
+    <div style="margin: 3rem 0; border-top: 2px solid var(--border); padding-top: 2rem;">
+      <h3 style="color: var(--navy); font-size: 1.3rem; margin-bottom: 1.5rem;"> User Feedback</h3>
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1.5rem;">
+        {% for msg in feedback %}
+        <div style="border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.5rem; background: var(--cream); border-left: 4px solid var(--gold); position: relative;">
+          <button class="feedback-delete-btn" onclick="deleteFeedback({{ msg.id }})" title="Delete feedback" style="position: absolute; top: 0.5rem; right: 0.5rem; background: none; border: none; font-size: 1.5rem; color: var(--text-muted); cursor: pointer; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; transition: color 0.2s; padding: 0;">×</button>
+          <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.8rem; padding-right: 1.5rem;">
+            <div>
+              <div style="font-weight: 600; color: var(--navy); font-size: 0.95rem;">{{ msg.email }}</div>
+              <div style="font-size: 0.8rem; color: var(--text-muted);">{{ msg.submitted_at[:10] }}</div>
+            </div>
+            <span style="background: var(--gold); color: var(--white); padding: 0.25rem 0.7rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; text-transform: capitalize;">{{ msg.page }}</span>
+          </div>
+          <p style="color: var(--text-dark); line-height: 1.5; font-size: 0.95rem;">{{ msg.message }}</p>
+        </div>
+        {% endfor %}
+      </div>
+      <div style="text-align: center; color: var(--text-muted); font-size: 0.9rem; margin-top: 1rem;">
+        Total Feedback: <strong style="color: var(--gold);">{{ feedback|length }}</strong>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="admin-layout">
+
+      <!-- MAIN TABLE -->
+      <div class="admin-main">
+        <div class="admin-bar">
+          <h2 class="admin-bar__title">All Stories</h2>
+          <div class="admin-bar__actions">
+            <a href="{{ url_for('generate_story') }}" class="btn btn--outline-dark btn--sm">AI Generate</a>
+            <a href="{{ url_for('admin_add') }}" class="btn btn--gold btn--sm">+ Add Story</a>
+          </div>
+        </div>
+
+        {% if stories %}
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Category</th>
+                <th>Storyteller</th>
+                <th>Location</th>
+                <th>Date</th>
+                <th>Featured</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for s in stories %}
+              <tr class="{% if s.featured %}admin-table__row--featured{% endif %}">
+                <td>
+                  <div class="admin-table__title">{{ s.title_en[:45] }}{% if s.title_en|length > 45 %}...{% endif %}</div>
+                  <div class="admin-table__title-ar">{{ s.title_ar[:35] }}</div>
+                </td>
+                <td><span class="tag">{{ s.category.replace('_',' ').title() }}</span></td>
+                <td>{{ s.storyteller_name or '—' }}</td>
+                <td>{{ s.location or '—' }}</td>
+                <td>{{ s.created_at[:10] }}</td>
+                <td>
+                  <form method="POST" action="{{ url_for('toggle_featured', story_id=s.id) }}">
+                    <button class="toggle-btn {% if s.featured %}toggle-btn--on{% endif %}">
+                      {{ 'Yes' if s.featured else 'No' }}
+                    </button>
+                  </form>
+                </td>
+                <td>
+                  <div class="action-btns">
+                    <a href="{{ url_for('story_detail', story_id=s.id) }}" class="action-btn action-btn--view" title="View">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </a>
+                    <a href="{{ url_for('admin_edit', story_id=s.id) }}" class="action-btn action-btn--edit" title="Edit">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </a>
+                    <form method="POST" action="{{ url_for('admin_delete', story_id=s.id) }}"
+                          onsubmit="return confirm('Delete &quot;{{ s.title_en[:30] }}&quot;?')">
+                      <button class="action-btn action-btn--del" title="Delete">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+          <p>No stories yet. <a href="{{ url_for('admin_add') }}">Add the first one.</a></p>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- SIDEBAR: Settings -->
+      <aside class="admin-sidebar">
+        <div class="sidebar-block">
+          <div class="sidebar-block__title">Gemini API Key</div>
+          <form method="POST" action="{{ url_for('admin_settings') }}">
+            <div class="form-group">
+              <input type="password" name="gemini_api_key" class="form-input"
+                placeholder="{{ 'Key saved ✓' if api_key else 'Enter AIza...' }}"
+                autocomplete="off"/>
+            </div>
+            <button type="submit" class="btn btn--gold btn--sm btn--full">Save Key</button>
+          </form>
+          {% if api_key %}
+          <div class="api-status api-status--ok">API key configured</div>
+          {% else %}
+          <div class="api-status api-status--warn">No API key — AI features disabled</div>
+          {% endif %}
+        </div>
+
+        <div class="sidebar-block">
+          <div class="sidebar-block__title">Quick Actions</div>
+          <div class="quick-links">
+            <a href="{{ url_for('admin_add') }}" class="quick-link">Add New Story</a>
+            <a href="{{ url_for('generate_story') }}" class="quick-link">AI Generate Story</a>
+            <a href="{{ url_for('stories') }}" class="quick-link">View Public Archive</a>
+            <a href="{{ url_for('index') }}" class="quick-link">View Homepage</a>
+          </div>
+        </div>
+
+        <div class="sidebar-block">
+          <div class="sidebar-block__title">Archive by Category</div>
+          {% for cat in categories %}
+          <div class="cat-stat">
+            <span class="cat-stat__label">{{ cat.en }}</span>
+            <span class="cat-stat__count">{{ cat_counts.get(cat.id, 0) }}</span>
+          </div>
+          {% endfor %}
+        </div>
+      </aside>
+
+    </div>
+  </div>
+</section>
+
+<script>
+function deleteFeedback(feedbackId) {
+  if (confirm('Are you sure you want to delete this feedback?')) {
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = `/admin/delete-feedback/${feedbackId}`;
+    document.body.appendChild(form);
+    form.submit();
+  }
+}
+</script>
+
+{% endblock %}

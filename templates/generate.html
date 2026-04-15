@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% block title %}Generate Story — UAE Heritage{% endblock %}
+{% block content %}
+
+<div class="page-hero page-hero--sm">
+  <div class="container">
+    <div class="page-hero__label">AI Story Generator</div>
+    <h1 class="page-hero__title">Create a Heritage Story<br/><span class="ar-title">إنشاء قصة تراثية</span></h1>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container">
+    <div class="generate-layout">
+
+      <div class="generate-form-wrap">
+        {% if not api_key %}
+        <div class="alert alert--warn">
+          Groq API key not set. Please configure it in <a href="{{ url_for('admin_dashboard') }}">Admin Settings</a>.
+        </div>
+        {% endif %}
+        {% if error %}
+        <div class="alert alert--error">{{ error }}</div>
+        {% endif %}
+
+        <form method="POST" action="{{ url_for('generate_story') }}" id="generateForm">
+          <div class="form-section">
+            <div class="form-section__title">Story Seed &nbsp; <span class="ar-inline">بذرة القصة</span></div>
+            <div class="form-group">
+              <label class="form-label">Topic or Seed Idea *</label>
+              <textarea name="topic" class="form-input form-textarea" rows="3"
+                placeholder="e.g. My grandfather's camel racing memories in Liwa... or an elder teaching patience through falconry..."
+                required>{{ request.form.get('topic','') }}</textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Storyteller Context (optional)</label>
+              <input type="text" name="storyteller_context" class="form-input"
+                placeholder="e.g. An 80-year-old grandfather from Abu Dhabi..."
+                value="{{ request.form.get('storyteller_context','') }}"/>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="form-section__title">Category & Values</div>
+            <div class="form-group">
+              <label class="form-label">Story Category</label>
+              <select name="category" class="form-input form-select">
+                {% for cat in categories %}
+                <option value="{{ cat.id }}" {% if request.form.get('category')==cat.id %}selected{% endif %}>
+                  {{ cat.en }} — {{ cat.ar }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">UAE Values to Embody</label>
+              <div class="checkbox-grid">
+                {% for v in uae_values %}
+                <label class="checkbox-item">
+                  <input type="checkbox" name="values" value="{{ v }}"
+                    {% if v in request.form.getlist('values') %}checked{% endif %}/>
+                  <span>{{ v }}</span>
+                </label>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="form-section__title">Output Language</div>
+            <div class="radio-group">
+              {% for lang in ['English','Arabic (العربية)','Bilingual'] %}
+              <label class="radio-item">
+                <input type="radio" name="language" value="{{ lang }}"
+                  {% if request.form.get('language', 'Bilingual')==lang %}checked{% endif %}/>
+                <span>{{ lang }}</span>
+              </label>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn--gold btn--lg" {% if not api_key %}disabled{% endif %}>
+              Generate Story &nbsp; إنشاء القصة
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- RESULT -->
+      {% if result %}
+      <div class="generate-result" id="generateResult">
+        <div class="result-header">
+          <div class="result-header__label">Generated Story</div>
+          <h2 class="result-header__title">{{ result.title_en }}</h2>
+          <div class="result-header__title-ar">{{ result.title_ar }}</div>
+          {% if result.theme %}
+          <div class="result-theme">Theme: {{ result.theme }}</div>
+          {% endif %}
+        </div>
+        <div class="result-tabs">
+          <button class="result-tab result-tab--active" data-target="result-en">English</button>
+          <button class="result-tab" data-target="result-ar">Arabic / عربي</button>
+        </div>
+        <div class="result-body" id="result-en">
+          {{ result.content_en | replace('\n','<br/>') | safe }}
+        </div>
+        <div class="result-body result-body--ar result-body--hidden" id="result-ar">
+          {{ result.content_ar | replace('\n','<br/>') | safe }}
+        </div>
+        <form method="POST" action="{{ url_for('generate_story') }}" class="result-save">
+          <!-- Re-submit all values + auto_save flag -->
+          <input type="hidden" name="topic" value="{{ request.form.get('topic','') }}"/>
+          <input type="hidden" name="category" value="{{ request.form.get('category','memories') }}"/>
+          {% for v in request.form.getlist('values') %}
+          <input type="hidden" name="values" value="{{ v }}"/>
+          {% endfor %}
+          <input type="hidden" name="language" value="{{ request.form.get('language','Bilingual') }}"/>
+          <input type="hidden" name="storyteller_context" value="{{ request.form.get('storyteller_context','') }}"/>
+          <input type="hidden" name="auto_save" value="1"/>
+          <button type="submit" class="btn btn--gold">
+            Save to Archive &nbsp; حفظ في الأرشيف
+          </button>
+          <a href="{{ url_for('generate_story') }}" class="btn btn--outline-dark">Generate Another</a>
+        </form>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+{% block scripts %}
+<script>
+// Result tabs
+document.querySelectorAll('.result-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.result-tab').forEach(b => b.classList.remove('result-tab--active'));
+    btn.classList.add('result-tab--active');
+    document.querySelectorAll('.result-body').forEach(b => b.classList.add('result-body--hidden'));
+    document.getElementById(btn.dataset.target)?.classList.remove('result-body--hidden');
+  });
+});
+// Loading state
+document.getElementById('generateForm')?.addEventListener('submit', function() {
+  const btn = this.querySelector('button[type=submit]');
+  btn.textContent = 'Generating... قيد الإنشاء';
+  btn.disabled = true;
+});
+</script>
+{% endblock %}

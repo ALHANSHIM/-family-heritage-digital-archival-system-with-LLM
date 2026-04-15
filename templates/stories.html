@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% block title %}Archive — UAE Heritage{% endblock %}
+{% block content %}
+
+<div class="page-hero page-hero--sm">
+  <div class="container">
+    <div class="page-hero__label" data-aos>Heritage Archive</div>
+    <h1 class="page-hero__title" data-aos data-aos-delay="80">
+      All Stories<br/><span class="ar-title">جميع القصص</span>
+    </h1>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container">
+    <div class="archive-layout">
+
+      <!-- SIDEBAR -->
+      <aside class="archive-sidebar">
+        <form method="GET" action="{{ url_for('stories') }}" id="filterForm">
+
+          <div class="sidebar-block">
+            <div class="sidebar-block__title">Search &nbsp; <span class="ar-inline">بحث</span></div>
+            <input
+              type="text" name="q" value="{{ q }}"
+              class="form-input" placeholder="Search stories..."
+              onchange="this.form.submit()"
+            />
+          </div>
+
+          <div class="sidebar-block">
+            <div class="sidebar-block__title">Category &nbsp; <span class="ar-inline">التصنيف</span></div>
+            <div class="filter-list">
+              <a href="{{ url_for('stories', value=selected_val, lang=selected_lang, q=q) }}"
+                 class="filter-item {% if not selected_cat %}filter-item--active{% endif %}">
+                All Categories
+              </a>
+              {% for cat in categories %}
+              <a href="{{ url_for('stories', category=cat.id, value=selected_val, lang=selected_lang, q=q) }}"
+                 class="filter-item {% if selected_cat==cat.id %}filter-item--active{% endif %}">
+                <span>{{ cat.en }}</span>
+                <span class="filter-ar">{{ cat.ar }}</span>
+              </a>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="sidebar-block">
+            <div class="sidebar-block__title">Values &nbsp; <span class="ar-inline">القيم</span></div>
+            <div class="filter-list">
+              <a href="{{ url_for('stories', category=selected_cat, lang=selected_lang, q=q) }}"
+                 class="filter-item {% if not selected_val %}filter-item--active{% endif %}">
+                All Values
+              </a>
+              {% for v in uae_values %}
+              <a href="{{ url_for('stories', category=selected_cat, value=v, lang=selected_lang, q=q) }}"
+                 class="filter-item {% if selected_val==v %}filter-item--active{% endif %}">
+                {{ v }}
+              </a>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="sidebar-block">
+            <div class="sidebar-block__title">Language &nbsp; <span class="ar-inline">اللغة</span></div>
+            <div class="filter-list">
+              <a href="{{ url_for('stories', category=selected_cat, value=selected_val, q=q) }}"
+                 class="filter-item {% if not selected_lang %}filter-item--active{% endif %}">All</a>
+              <a href="{{ url_for('stories', category=selected_cat, value=selected_val, lang='English', q=q) }}"
+                 class="filter-item {% if selected_lang=='English' %}filter-item--active{% endif %}">English</a>
+              <a href="{{ url_for('stories', category=selected_cat, value=selected_val, lang='Arabic (العربية)', q=q) }}"
+                 class="filter-item {% if selected_lang=='Arabic (العربية)' %}filter-item--active{% endif %}">Arabic / عربي</a>
+            </div>
+          </div>
+
+          {% if selected_cat or selected_val or selected_lang or q %}
+          <a href="{{ url_for('stories') }}" class="btn btn--outline-dark btn--sm btn--full" style="margin-top:0.5rem;">
+            Clear Filters
+          </a>
+          {% endif %}
+        </form>
+      </aside>
+
+      <!-- MAIN GRID -->
+      <div class="archive-main">
+        <div class="archive-bar">
+          <span class="archive-count">
+            {{ stories|length }} stor{{ 'y' if stories|length == 1 else 'ies' }}
+            {% if selected_cat or selected_val or q %} found{% endif %}
+          </span>
+          {% if admin %}
+          <a href="{{ url_for('admin_add') }}" class="btn btn--gold btn--sm">
+            + Add Story
+          </a>
+          {% endif %}
+        </div>
+
+        {% if stories %}
+        <div class="story-grid story-grid--list">
+          {% for s in stories %}
+          {% set vals = s.values_list.split('|') if s.values_list else [] %}
+          <article class="story-card story-card--row" data-aos>
+            {% if s.image_path %}
+            <div class="story-card__thumb">
+              <img src="{{ url_for('static', filename='uploads/' + s.image_path) }}" alt=""/>
+            </div>
+            {% else %}
+            <div class="story-card__thumb story-card__thumb--placeholder">
+              <div class="placeholder-pattern"></div>
+            </div>
+            {% endif %}
+            <div class="story-card__body">
+              <div class="story-card__top">
+                <span class="story-card__cat">{{ s.category.replace('_',' ').title() }}</span>
+                {% if s.featured %}<span class="tag tag--gold">Featured</span>{% endif %}
+              </div>
+              <h3 class="story-card__title story-card__title--md">{{ s.title_en }}</h3>
+              <div class="story-card__title-ar">{{ s.title_ar }}</div>
+              <p class="story-card__excerpt">{{ s.content_en[:180] }}...</p>
+              <div class="story-card__meta">
+                <span>{{ s.storyteller_name }}</span>
+                <span class="dot">·</span>
+                <span>{{ s.relationship }}</span>
+                <span class="dot">·</span>
+                <span>{{ s.location }}</span>
+                <span class="dot">·</span>
+                <span>{{ s.created_at[:10] }}</span>
+              </div>
+              <div class="story-card__footer">
+                <div class="story-card__values">
+                  {% for v in vals[:4] %}<span class="tag">{{ v }}</span>{% endfor %}
+                </div>
+                <a href="{{ url_for('story_detail', story_id=s.id) }}" class="btn btn--gold btn--sm">
+                  Read Story
+                </a>
+              </div>
+            </div>
+          </article>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+          <div class="empty-state__icon">&#9700;</div>
+          <h3>No stories found</h3>
+          <p>Try adjusting your filters or search term.</p>
+          <a href="{{ url_for('stories') }}" class="btn btn--outline-dark btn--sm">Clear Filters</a>
+        </div>
+        {% endif %}
+      </div>
+
+    </div><!-- /archive-layout -->
+  </div>
+</section>
+
+{% endblock %}

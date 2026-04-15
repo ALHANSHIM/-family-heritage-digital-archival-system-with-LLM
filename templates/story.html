@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+{% block title %}{{ story.title_en }} — UAE Heritage{% endblock %}
+{% block content %}
+
+<article class="story-page">
+
+  <!-- STORY HEADER -->
+  <div class="story-header">
+    <div class="story-header__geo"></div>
+    <div class="container">
+      <div class="story-breadcrumb" data-aos>
+        <a href="{{ url_for('stories') }}">Archive</a>
+        <span class="crumb-sep">/</span>
+        <a href="{{ url_for('stories', category=story.category) }}">{{ cat_label.en }}</a>
+      </div>
+      <div class="story-header__cat" data-aos data-aos-delay="50">{{ cat_label.en }} &nbsp;·&nbsp; {{ cat_label.ar }}</div>
+      <h1 class="story-header__title" data-aos data-aos-delay="100">{{ story.title_en }}</h1>
+      <div class="story-header__title-ar" data-aos data-aos-delay="180">{{ story.title_ar }}</div>
+      <div class="story-header__meta" data-aos data-aos-delay="240">
+        <span>{{ story.storyteller_name }}</span>
+        <span class="dot">·</span>
+        <span>{{ story.relationship }}</span>
+        <span class="dot">·</span>
+        <span>{{ story.location }}</span>
+        {% if story.storyteller_age %}<span class="dot">·</span><span>Age {{ story.storyteller_age }}</span>{% endif %}
+        <span class="dot">·</span>
+        <span>{{ story.created_at[:10] }}</span>
+      </div>
+      {% if values_list %}
+      <div class="story-header__values" data-aos data-aos-delay="300">
+        {% for v in values_list %}<span class="tag tag--light">{{ v }}</span>{% endfor %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- STORY IMAGE -->
+  {% if story.image_path %}
+  <div class="story-image-wrap">
+    <div class="container">
+      <div class="story-image">
+        <img src="{{ url_for('static', filename='uploads/' + story.image_path) }}" alt="{{ story.title_en }}"/>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- STORY BODY -->
+  <div class="section">
+    <div class="container">
+      <div class="story-body-grid">
+
+        <!-- ENGLISH CONTENT -->
+        <div class="story-content" data-aos>
+          <div class="story-content__label">English Narrative</div>
+          <div class="story-content__text">
+            {{ story.content_en | replace('\n', '<br/>') | safe }}
+          </div>
+        </div>
+
+        <!-- ARABIC CONTENT -->
+        <div class="story-content story-content--ar" data-aos data-aos-delay="100">
+          <div class="story-content__label">الرواية العربية</div>
+          <div class="story-content__text story-content__text--ar">
+            {{ story.content_ar | replace('\n', '<br/>') | safe }}
+          </div>
+        </div>
+
+      </div>
+
+      <!-- THEME + ORIGINAL -->
+      {% if story.theme %}
+      <div class="story-theme" data-aos>
+        <span class="story-theme__label">Theme &nbsp;·&nbsp; الموضوع</span>
+        <span class="story-theme__text">{{ story.theme }}</span>
+      </div>
+      {% endif %}
+
+      {% if story.original_story and story.original_story != 'Sample seeded story.' %}
+      <details class="story-original" data-aos>
+        <summary>View Original Submission &nbsp;·&nbsp; القصة الأصلية</summary>
+        <div class="story-original__text">{{ story.original_story }}</div>
+      </details>
+      {% endif %}
+
+      {% if admin %}
+      <div class="story-admin-bar" data-aos>
+        <a href="{{ url_for('admin_edit', story_id=story.id) }}" class="btn btn--outline-dark btn--sm">Edit Story</a>
+        <form method="POST" action="{{ url_for('toggle_featured', story_id=story.id) }}" style="display:inline;">
+          <button class="btn btn--outline-dark btn--sm">
+            {% if story.featured %}Unfeature{% else %}Feature{% endif %}
+          </button>
+        </form>
+        <form method="POST" action="{{ url_for('admin_delete', story_id=story.id) }}"
+              onsubmit="return confirm('Delete this story?')" style="display:inline;">
+          <button class="btn btn--danger btn--sm">Delete</button>
+        </form>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+
+</article>
+
+<!-- ── AI CHAT ─────────────────────────────────────────────────────────────── -->
+<div class="chat-fab" id="chatFab" title="Chat with AI about this story">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+  </svg>
+  <span>Ask about this story</span>
+</div>
+
+<div class="chat-panel" id="chatPanel">
+  <div class="chat-panel__header">
+    <div class="chat-panel__header-text">
+      <div class="chat-panel__title">Story Companion AI</div>
+      <div class="chat-panel__subtitle">Ask anything about this story</div>
+    </div>
+    <button class="chat-panel__close" id="chatClose" aria-label="Close">&times;</button>
+  </div>
+  <div class="chat-panel__context">
+    <strong>{{ story.title_en }}</strong><br/>
+    <span class="ar-inline" style="font-size:0.85rem;">{{ story.title_ar }}</span>
+  </div>
+  <div class="chat-messages" id="chatMessages">
+    <div class="chat-msg chat-msg--ai">
+      <div class="chat-msg__bubble">
+        Marhaba! I am here to guide you through the story
+        "<strong>{{ story.title_en }}</strong>." Ask me anything about its themes,
+        the values it embodies, the cultural traditions it describes, or what we can
+        learn from {{ story.storyteller_name }}'s experience.
+      </div>
+    </div>
+  </div>
+  <div class="chat-input-row">
+    <input
+      type="text"
+      class="chat-input"
+      id="chatInput"
+      placeholder="Ask about this story..."
+      autocomplete="off"
+    />
+    <button class="chat-send" id="chatSend">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+      </svg>
+    </button>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+const STORY_ID = "{{ story.id }}";
+const chatHistory = [];
+
+const fab       = document.getElementById('chatFab');
+const panel     = document.getElementById('chatPanel');
+const closeBtn  = document.getElementById('chatClose');
+const input     = document.getElementById('chatInput');
+const sendBtn   = document.getElementById('chatSend');
+const messages  = document.getElementById('chatMessages');
+
+fab.addEventListener('click', () => {
+  panel.classList.add('chat-panel--open');
+  fab.style.display = 'none';
+  setTimeout(() => input.focus(), 300);
+});
+closeBtn.addEventListener('click', () => {
+  panel.classList.remove('chat-panel--open');
+  fab.style.display = '';
+});
+
+function appendMsg(role, text) {
+  const div = document.createElement('div');
+  div.className = `chat-msg chat-msg--${role}`;
+  const bubble = document.createElement('div');
+  bubble.className = 'chat-msg__bubble';
+  bubble.innerHTML = text.replace(/\n/g, '<br/>');
+  div.appendChild(bubble);
+  messages.appendChild(div);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+function appendTyping() {
+  const div = document.createElement('div');
+  div.className = 'chat-msg chat-msg--ai chat-msg--typing';
+  div.id = 'typing';
+  div.innerHTML = '<div class="chat-msg__bubble"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div>';
+  messages.appendChild(div);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+async function sendMessage() {
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+  sendBtn.disabled = true;
+  appendMsg('user', msg);
+  chatHistory.push({role:'user', content:msg});
+  appendTyping();
+  try {
+    const res = await fetch(`/api/chat/${STORY_ID}`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({message: msg, history: chatHistory})
+    });
+    const data = await res.json();
+    document.getElementById('typing')?.remove();
+    const reply = data.reply || data.error || 'Sorry, an error occurred.';
+    appendMsg('ai', reply);
+    chatHistory.push({role:'assistant', content:reply});
+  } catch(e) {
+    document.getElementById('typing')?.remove();
+    appendMsg('ai', 'Connection error. Please try again.');
+  }
+  sendBtn.disabled = false;
+  input.focus();
+}
+
+sendBtn.addEventListener('click', sendMessage);
+input.addEventListener('keydown', e => { if(e.key === 'Enter') sendMessage(); });
+</script>
+{% endblock %}

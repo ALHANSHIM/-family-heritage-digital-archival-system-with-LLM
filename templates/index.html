@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+{% block title %}UAE Family Heritage Archive — أرشيف التراث الأسري{% endblock %}
+{% block content %}
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-geo"></div>
+  <div class="hero-inner">
+    <div class="hero-khat" data-aos>بسم الله</div>
+    <h1 class="hero-title" data-aos data-aos-delay="100">
+      UAE Family Heritage<br/>
+      <em>Digital Archive</em>
+    </h1>
+    <div class="hero-title-ar" data-aos data-aos-delay="200">
+      أرشيف التراث الأسري الرقمي الإماراتي
+    </div>
+    <p class="hero-sub" data-aos data-aos-delay="300">
+      Preserving the wisdom of elders. Honouring the stories that shaped us.<br/>
+      <span class="ar-inline">الحفاظ على حكمة الأجداد وتكريم القصص التي صنعتنا</span>
+    </p>
+    <div class="hero-actions" data-aos data-aos-delay="400">
+      <a href="{{ url_for('stories') }}" class="btn btn--gold">
+        Explore Archive &nbsp; استكشف الأرشيف
+      </a>
+      {% if admin %}
+      <a href="{{ url_for('admin_add') }}" class="btn btn--outline">
+        Add Story &nbsp; أضف قصة
+      </a>
+      {% endif %}
+    </div>
+    <div class="hero-stats" data-aos data-aos-delay="500">
+      <div class="hero-stat">
+        <span class="hero-stat__num">{{ total }}</span>
+        <span class="hero-stat__label">Stories Archived<br/><span class="ar-inline">قصة محفوظة</span></span>
+      </div>
+      <div class="hero-stat__div"></div>
+      <div class="hero-stat">
+        <span class="hero-stat__num">{{ categories|length }}</span>
+        <span class="hero-stat__label">Categories<br/><span class="ar-inline">تصنيف</span></span>
+      </div>
+      <div class="hero-stat__div"></div>
+      <div class="hero-stat">
+        <span class="hero-stat__num">2026</span>
+        <span class="hero-stat__label">Year of the Family<br/><span class="ar-inline">عام الأسرة</span></span>
+      </div>
+    </div>
+  </div>
+  <div class="hero-scroll-hint">
+    <div class="scroll-line"></div>
+    <span>Scroll</span>
+  </div>
+</section>
+
+<!-- CATEGORIES -->
+<section class="section section--dark">
+  <div class="container">
+    <div class="section-head" data-aos>
+      <div class="section-label">Browse by Category</div>
+      <h2 class="section-title">
+        Story Collections<br/>
+        <span class="ar-title">مجموعات القصص</span>
+      </h2>
+    </div>
+    <div class="cat-grid">
+      {% for cat in categories %}
+      <a href="{{ url_for('stories', category=cat.id) }}" class="cat-card" data-aos data-aos-delay="{{ loop.index0 * 60 }}">
+        <div class="cat-card__count">{{ cat_counts.get(cat.id, 0) }}</div>
+        <div class="cat-card__en">{{ cat.en }}</div>
+        <div class="cat-card__ar">{{ cat.ar }}</div>
+        <div class="cat-card__arrow">&rarr;</div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- FEATURED STORIES -->
+{% if featured %}
+<section class="section">
+  <div class="container">
+    <div class="section-head" data-aos>
+      <div class="section-label">Featured</div>
+      <h2 class="section-title">
+        Stories of the Archive<br/>
+        <span class="ar-title">قصص من الأرشيف</span>
+      </h2>
+    </div>
+    <div class="story-grid story-grid--featured">
+      {% for s in featured %}
+      {% set vals = s.values_list.split('|') if s.values_list else [] %}
+      <article class="story-card story-card--featured" data-aos data-aos-delay="{{ loop.index0 * 100 }}">
+        {% if s.image_path %}
+        <div class="story-card__img">
+          <img src="{{ url_for('static', filename='uploads/' + s.image_path) }}" alt="{{ s.title_en }}"/>
+        </div>
+        {% else %}
+        <div class="story-card__img story-card__img--placeholder">
+          <div class="placeholder-pattern"></div>
+        </div>
+        {% endif %}
+        <div class="story-card__body">
+          <div class="story-card__cat">
+            {{ s.category.replace('_',' ').title() }}
+          </div>
+          <h3 class="story-card__title">{{ s.title_en }}</h3>
+          <div class="story-card__title-ar">{{ s.title_ar }}</div>
+          <p class="story-card__excerpt">
+            {{ s.content_en[:160] }}...
+          </p>
+          <div class="story-card__meta">
+            <span>{{ s.storyteller_name }}</span>
+            <span class="dot">·</span>
+            <span>{{ s.location }}</span>
+          </div>
+          <div class="story-card__values">
+            {% for v in vals[:3] %}
+            <span class="tag">{{ v }}</span>
+            {% endfor %}
+          </div>
+          <a href="{{ url_for('story_detail', story_id=s.id) }}" class="story-card__link">
+            Read Story &rarr;
+          </a>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- RECENT STORIES -->
+{% if recent %}
+<section class="section section--sand">
+  <div class="container">
+    <div class="section-head" data-aos>
+      <div class="section-label">Latest Additions</div>
+      <h2 class="section-title">
+        Recently Archived<br/>
+        <span class="ar-title">أحدث الإضافات</span>
+      </h2>
+    </div>
+    <div class="story-grid story-grid--compact">
+      {% for s in recent %}
+      {% set vals = s.values_list.split('|') if s.values_list else [] %}
+      <article class="story-card story-card--compact" data-aos data-aos-delay="{{ loop.index0 * 50 }}">
+        <div class="story-card__body">
+          <div class="story-card__cat">{{ s.category.replace('_',' ').title() }}</div>
+          <h3 class="story-card__title story-card__title--sm">{{ s.title_en }}</h3>
+          <div class="story-card__title-ar story-card__title-ar--sm">{{ s.title_ar }}</div>
+          <p class="story-card__excerpt story-card__excerpt--sm">
+            {{ s.content_en[:100] }}...
+          </p>
+          <div class="story-card__meta">
+            <span>{{ s.storyteller_name }}</span>
+            <span class="dot">·</span>
+            <span>{{ s.created_at[:10] }}</span>
+          </div>
+          <a href="{{ url_for('story_detail', story_id=s.id) }}" class="story-card__link">Read &rarr;</a>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+    <div class="section-cta" data-aos>
+      <a href="{{ url_for('stories') }}" class="btn btn--outline-dark">
+        View Full Archive &nbsp; عرض الأرشيف الكامل
+      </a>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- VALUES BANNER -->
+<section class="values-banner">
+  <div class="container">
+    <div class="values-banner__title" data-aos>UAE Family Values &nbsp;·&nbsp; القيم الأسرية الإماراتية</div>
+    <div class="values-track">
+      {% set vals = ["Respect","Unity","Responsibility","Hard Work","Compassion","Loyalty","Generosity","Wisdom","Family Bonds","Hospitality","Patience","Courage"] %}
+      {% set vals_ar = ["الاحترام","الوحدة","المسؤولية","العمل الجاد","التعاطف","الولاء","الكرم","الحكمة","الروابط الأسرية","الضيافة","الصبر","الشجاعة"] %}
+      {% for i in range(vals|length) %}
+      <div class="value-pill">
+        <span class="value-pill__en">{{ vals[i] }}</span>
+        <span class="value-pill__ar">{{ vals_ar[i] }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{% endblock %}
